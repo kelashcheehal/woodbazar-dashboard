@@ -1,16 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher, redirectToSignIn } from "@clerk/nextjs/server";
 
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
 
-  // 1) If not logged in → block immediately
+  // 1) Not logged in → redirect to sign-in
   if (!userId && isAdminRoute(req)) {
-    return auth().redirectToSignIn({ returnBackUrl: req.url });
+    return redirectToSignIn({ returnBackUrl: req.url });
   }
 
-  // 2) If logged in → check role
+  // 2) Check user role
   const role = sessionClaims?.publicMetadata?.role;
 
   if (isAdminRoute(req) && role !== "admin") {
@@ -20,7 +20,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    "/admin/:path*", // Only protect admin, avoid messing with whole site
+    "/admin/:path*",
     "/dashboard/:path*",
     "/api/:path*",
   ],
