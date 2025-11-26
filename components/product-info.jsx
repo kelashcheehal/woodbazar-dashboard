@@ -178,30 +178,30 @@ export default function ProductInfo({ onAddToCart }) {
       </div>
 
       {/* Quantity & Add to Cart */}
-      <div className="animate-in fade-in slide-in-from-left-2 duration-700 delay-200 flex flex-col sm:flex-row gap-3 pt-2">
-        <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
+      <div className="animate-in fade-in slide-in-from-left-2 duration-700 delay-200 flex flex-col sm:flex-row gap-3 pt-2 w-full max-w-md mx-auto">
+        {/* Quantity Selector */}
+        <div className="flex w-full sm:w-auto justify-center items-center border border-gray-300 rounded-lg overflow-hidden">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-lg font-semibold"
+            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-lg font-semibold text-center"
           >
             −
           </button>
-          <span className="px-6 py-2 text-lg font-bold text-gray-800">
+          <span className="flex-1 px-4 py-2 text-lg font-bold text-gray-800 text-center">
             {quantity}
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="px-4 py-2 bg-gray-100 text-[#D4A574] hover:bg-gray-200 transition-colors text-lg font-semibold"
+            className="flex-1 px-4 py-2 bg-gray-100 text-[#D4A574] hover:bg-gray-200 transition-colors text-lg font-semibold text-center"
           >
             +
           </button>
         </div>
 
+        {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
-          className={`flex-1 py-2.5 rounded-lg  font-medium text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base ${
-            addedToCart ? "shadow-lg" : ""
-          }`}
+          className={`flex-1 py-2.5 rounded-lg font-medium text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base`}
           style={{
             backgroundColor: addedToCart ? "#2C1810" : "#D4A574",
           }}
