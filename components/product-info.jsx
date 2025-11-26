@@ -1,49 +1,28 @@
 "use client";
 
-import { supabase } from "@/lib/supabaseClient";
-import { Heart, Share2, CheckCircle, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { Heart, Share2, CheckCircle } from "lucide-react";
 import StarRating from "./star-rating";
 import ReviewsList from "./review-list";
+import { useProducts } from "@/app/contexts/ProductsContext";
+import RelatedProducts from "./related-products";
 
 export default function ProductInfo({ onAddToCart }) {
   const { id: productId } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { products, loading } = useProducts();
 
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
+  const product = products.find((p) => p.id.toString() === productId) || {};
+
+  const [selectedColor, setSelectedColor] = useState(
+    product?.colors?.[0]?.name || ""
+  );
+  const [selectedSize, setSelectedSize] = useState(
+    product?.sizes?.[0]?.toLowerCase() || ""
+  );
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
-
-  useEffect(() => {
-    if (!productId) return;
-
-    const fetchProduct = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("id", productId)
-          .single();
-
-        if (error) throw error;
-
-        setProduct(data || {});
-        setSelectedColor(data?.colors?.[0]?.name || "");
-        setSelectedSize(data?.sizes?.[0]?.toLowerCase() || "");
-      } catch (err) {
-        console.error("Error fetching product:", err.message);
-        setProduct({});
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productId]);
 
   const discountedPrice = useMemo(() => {
     if (!product?.price) return 0;
@@ -61,19 +40,15 @@ export default function ProductInfo({ onAddToCart }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[400px]">
-        <Loader2 className="w-12 h-12 animate-spin text-[#D4A574]" />
+        <div className="w-12 h-12 animate-spin text-[#D4A574]">Loading...</div>
       </div>
     );
   }
 
-  if (!product) return null;
-
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-700">
       {/* Title */}
-      <h4
-        className="text-2xl md:text-2xl font-medium mb-1"
-      >
+      <h4 className="text-2xl md:text-2xl font-medium mb-1">
         {product.name || (
           <span className="text-red-600 text-xs">No product name</span>
         )}
@@ -82,10 +57,9 @@ export default function ProductInfo({ onAddToCart }) {
       {/* Rating & Reviews */}
       <div className="flex items-center gap-3 mb-3">
         <div className="flex items-center gap-0.5">
-          <StarRating rating={product.rating} size="md" />
+          <StarRating rating={product.rating || 0} size="md" />
         </div>
-
-        <ReviewsList reviews={product.reviews} />
+        <ReviewsList reviews={product.reviews || []} />
       </div>
 
       {/* Price & Stock */}
@@ -94,11 +68,11 @@ export default function ProductInfo({ onAddToCart }) {
           <div className="flex items-center gap-3 mb-2">
             <span className="text-3xl md:text-4xl font-bold text-[#D4A574]">
               $
-              {product?.discount
+              {product.discount
                 ? discountedPrice.toFixed(2)
                 : product.price.toFixed(2)}
             </span>
-            {product?.discount ? (
+            {product.discount ? (
               <span className="text-lg line-through text-[#bbb]">
                 ${product.price.toFixed(2)}
               </span>
@@ -205,38 +179,31 @@ export default function ProductInfo({ onAddToCart }) {
 
       {/* Quantity & Add to Cart */}
       <div className="animate-in fade-in slide-in-from-left-2 duration-700 delay-200 flex flex-col sm:flex-row gap-3 pt-2">
-        <div
-          className="flex items-center border-2 rounded-lg"
-          style={{ borderColor: "var(--primary-dark)" }}
-        >
+        <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-3 py-2 transition-all hover:bg-gray-100 text-lg"
-            style={{ color: "var(--primary-dark)" }}
+            className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-lg font-semibold"
           >
             −
           </button>
-          <span
-            className="px-5 py-2 font-bold"
-            style={{ color: "var(--primary-dark)" }}
-          >
+          <span className="px-6 py-2 text-lg font-bold text-gray-800">
             {quantity}
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="px-3 py-2 transition-all hover:bg-gray-100 text-lg"
-            style={{ color: "var(--primary-dark)" }}
+            className="px-4 py-2 bg-gray-100 text-[#D4A574] hover:bg-gray-200 transition-colors text-lg font-semibold"
           >
             +
           </button>
         </div>
+
         <button
           onClick={handleAddToCart}
-          className={`flex-1 py-2.5 rounded-lg font-bold text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base ${
+          className={`flex-1 py-2.5 rounded-lg  font-medium text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base ${
             addedToCart ? "shadow-lg" : ""
           }`}
           style={{
-            backgroundColor: addedToCart ? "#00a86b" : "var(--primary-dark)",
+            backgroundColor: addedToCart ? "#2C1810" : "#D4A574",
           }}
         >
           {addedToCart ? (
@@ -276,6 +243,7 @@ export default function ProductInfo({ onAddToCart }) {
           <Share2 size={18} /> Share
         </button>
       </div>
+      {/* <RelatedProducts /> */}
     </div>
   );
 }

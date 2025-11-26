@@ -1,57 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useProducts } from "@/app/contexts/ProductsContext";
+import Loading from "@/app/admin/products/loading";
 
 export default function ProductGallery() {
-  const params = useParams(); // { id: '1' } if your route is /product/[id]
-  const productId = params.id; // extract the ID
-
-  const [images, setImages] = useState([]);
+  const { products, loading } = useProducts(); // use global products
+  const { id } = useParams(); // id from URL
   const [selectedImage, setSelectedImage] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [product, setProduct] = useState({ price: 0, discount: 0, name: "" });
 
-  useEffect(() => {
-    if (!productId) return; // safety check
+  if (loading) return <Loading />;
 
-    const fetchProduct = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("image_urls, price, discount, name")
-          .eq("id", productId)
-          .single();
+  // find product from context
+  const product = products.find((p) => p.id.toString() === id);
+  if (!product) return <p>Product not found</p>;
 
-        if (error) throw error;
-
-        const imgs = data.image_urls ? JSON.parse(data.image_urls) : [];
-        setImages(imgs.length ? imgs : ["/placeholder.svg"]);
-        setProduct({
-          price: Number(data.price) || 0,
-          discount: Number(data.discount) || 0,
-          name: data.name || "",
-        });
-      } catch (err) {
-        console.error("Error fetching product:", err.message);
-        setImages(["/placeholder.svg"]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productId]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[400px]">
-        <Loader2 className="w-12 h-12 animate-spin text-[#D4A574]" />
-      </div>
-    );
-  }
+  // parse image URLs if stored as JSON string
+  const images = product.image_urls
+    ? JSON.parse(product.image_urls)
+    : ["/placeholder.svg"];
 
   const discountedPrice = product.discount
     ? product.price - (product.price * product.discount) / 100
