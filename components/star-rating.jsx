@@ -1,13 +1,15 @@
-export default function StarRating({ rating, size = "md" }) {
-  const sizeClass = size === "lg" ? "w-5 h-5" : "w-4 h-4"
-  const stars = Array.from({ length: 5 }, (_, i) => i + 1)
+export default function StarRating({ rating = 0, reviews = 0, size = "md" }) {
+  const sizeClass = size === "lg" ? "w-5 h-5" : "w-4 h-4";
+  const stars = Array.from({ length: 5 }, (_, i) => i + 1);
 
   return (
     <div className="flex gap-1">
       {stars.map((star) => (
         <svg
           key={star}
-          className={`${sizeClass} ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
+          className={`${sizeClass} ${
+            reviews > 0 && star <= rating ? "text-yellow-400" : "text-gray-300"
+          }`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -15,5 +17,5 @@ export default function StarRating({ rating, size = "md" }) {
         </svg>
       ))}
     </div>
-  )
+  );
 }
