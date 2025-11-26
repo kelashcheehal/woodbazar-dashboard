@@ -4,6 +4,7 @@ import "../../app/globals.css";
 
 import Sidebar from "@/components/admin/sidebar";
 import Header from "@/components/admin/header";
+import Footer from "@/components/footer";
 const jost = Jost({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -12,7 +13,7 @@ const jost = Jost({
 export default function AdminLayout({ children }) {
   return (
     <div className={`${jost.variable} font-sans antialiased`}>
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-white flex">
         {/* Sidebar */}
         <Sidebar />
 
@@ -22,6 +23,7 @@ export default function AdminLayout({ children }) {
           <main className="flex-1 p-6 overflow-auto no-scrollbar">
             {children}
           </main>
+          <Footer />
         </div>
       </div>
     </div>

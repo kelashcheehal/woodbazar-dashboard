@@ -29,7 +29,7 @@ export default function Admin() {
   if (!isLoaded) return <p>Loading...</p>;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 text-[#2C1810]">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4  duration-700 text-[#2C1810]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

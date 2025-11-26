@@ -1,24 +1,30 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
-import { Edit, Eye, Filter, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Eye, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [sortOption, setSortOption] = useState("");
+  const [discountOnly, setDiscountOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 25;
+  const categories = Array.from(new Set(products.map((p) => p.category)));
 
-  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const { data, error } = await supabase
           .from("products")
           .select("*")
-          .order("id", { ascending: false }); // recent first
+          .order("id", { ascending: false });
         if (error) throw error;
         setProducts(data);
       } catch (err) {
@@ -41,13 +47,54 @@ export default function ProductsPage() {
     }
   };
 
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((p) => {
+      const matchesSearch =
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = categoryFilter
+        ? p.category === categoryFilter
+        : true;
+      const matchesDiscount = discountOnly ? p.discount > 0 : true;
+      return matchesSearch && matchesCategory && matchesDiscount;
+    });
+
+    switch (sortOption) {
+      case "price-asc":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case "name-asc":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "discounted":
+        result.sort((a, b) => (b.discount || 0) - (a.discount || 0));
+        break;
+    }
+
+    return result;
+  }, [products, searchTerm, categoryFilter, sortOption, discountOnly]);
+
+  useEffect(
+    () => setCurrentPage(1),
+    [searchTerm, categoryFilter, sortOption, discountOnly]
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
+  const currentProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const nextPage = () =>
-    currentPage < totalPages && setCurrentPage(currentPage + 1);
-  const prevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   if (loading)
     return (
@@ -62,7 +109,7 @@ export default function ProductsPage() {
     );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white text-[#2C1810]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -71,31 +118,59 @@ export default function ProductsPage() {
         </div>
         <Link
           href="/admin/products/add-product"
-          className="bg-[#2C1810] hover:bg-[#2C1810]/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#2C1810] hover:bg-[#2C1810]/90 text-[#D4A574] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={20} />
           <span>Add Product</span>
         </Link>
       </div>
 
-      {/* Filters & Search */}
+      {/* Search & Filters */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
           <input
             type="text"
-            placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+            placeholder="Search products by name or category..."
+            className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button className="px-4 py-2 border border-gray-200 rounded-lg flex items-center gap-2 text-gray-600 hover:bg-gray-50 transition-colors">
-            <Filter size={18} />
-            <span>Filter</span>
-          </button>
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+          >
+            <option value="">Sort By</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="name-asc">Name: A → Z</option>
+            <option value="name-desc">Name: Z → A</option>
+            <option value="discounted">Discounted</option>
+          </select>
+
+          <label className="flex items-center gap-2 text-gray-600">
+            <input
+              type="checkbox"
+              checked={discountOnly}
+              onChange={() => setDiscountOnly(!discountOnly)}
+            />
+            Discounted Only
+          </label>
         </div>
       </div>
 
@@ -141,7 +216,8 @@ export default function ProductsPage() {
                 return (
                   <tr
                     key={p.id}
-                    className="hover:bg-gray-50/50 transition-colors"
+                    className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/admin/products/${p.id}`)}
                   >
                     <td className="px-4 whitespace-nowrap max-w-[385px]">
                       <div className="flex items-center gap-3">
@@ -151,14 +227,13 @@ export default function ProductsPage() {
                           className="h-10 w-10 rounded-lg object-cover shrink-0"
                         />
                         <span
-                          className="font-sm text-[#2C1810] truncate  block"
+                          className="font-sm text-[#2C1810] truncate block"
                           title={p.name}
                         >
                           {p.name}
                         </span>
                       </div>
                     </td>
-
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                       {p.category}
                     </td>
@@ -194,9 +269,13 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 text-gray-400 hover:text-[#D4A574] transition-colors rounded-lg hover:bg-[#D4A574]/10">
+                        <Link
+                          className="p-2 text-gray-400 hover:text-[#D4A574] transition-colors rounded-lg hover:bg-[#D4A574]/10"
+                          href={`/admin/products/${p.id}`}
+                        >
                           <Eye size={18} />
-                        </button>
+                        </Link>
+
                         <Link
                           className="p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
                           href={`/admin/products/edit-product/${p.id}`}
@@ -230,8 +309,11 @@ export default function ProductsPage() {
         <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
           <span className="text-sm text-gray-500">
             Showing {startIndex + 1} to{" "}
-            {Math.min(startIndex + itemsPerPage, products.length)} of{" "}
-            {products.length} entries
+            {Math.min(
+              startIndex + currentProducts.length,
+              filteredProducts.length
+            )}{" "}
+            of {filteredProducts.length} entries
           </span>
           <div className="flex gap-2">
             <button
