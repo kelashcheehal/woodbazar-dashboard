@@ -1,11 +1,18 @@
 "use client";
 
+import { useProducts } from "@/app/contexts/ProductsContext";
 import { supabase } from "@/lib/supabaseClient";
 import { Edit, Eye, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 export default function ProductsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -16,7 +23,8 @@ export default function ProductsPage() {
   const [discountOnly, setDiscountOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
-  const categories = Array.from(new Set(products.map((p) => p.category)));
+  const { categories } = useProducts();
+  console.log(categories);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -46,7 +54,6 @@ export default function ProductsPage() {
       alert("Failed to delete product.");
     }
   };
-
   const filteredProducts = useMemo(() => {
     let result = products.filter((p) => {
       const matchesSearch =
@@ -136,38 +143,54 @@ export default function ProductsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
+        {/* {filter} */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+          {/* Category Filter */}
+          <Select
+            value={categoryFilter === "" ? "all" : categoryFilter}
+            onValueChange={(value) =>
+              setCategoryFilter(value === "all" ? "" : value)
+            }
           >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-48 px-4 py-2 border cursor-pointer border-gray-300 bg-white rounded-lg hover:shadow-sm transition-all duration-200 focus:ring-2 focus:ring-[#D4A574]/40">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
 
-          <select
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.category}>
+                  {cat.category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Sort By */}
+          <Select
             value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574]/20 focus:border-[#D4A574]"
+            onValueChange={(value) => setSortOption(value)}
           >
-            <option value="">Sort By</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="price-desc">Price: High → Low</option>
-            <option value="name-asc">Name: A → Z</option>
-            <option value="name-desc">Name: Z → A</option>
-            <option value="discounted">Discounted</option>
-          </select>
+            <SelectTrigger className="w-48 cursor-pointer px-4 py-2 border border-gray-300 bg-white rounded-lg hover:shadow-sm transition-all duration-200 focus:ring-2 focus:ring-[#D4A574]/40">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
 
-          <label className="flex items-center gap-2 text-gray-600">
+            <SelectContent>
+              <SelectItem value="price-asc">Price: Low → High</SelectItem>
+              <SelectItem value="price-desc">Price: High → Low</SelectItem>
+              <SelectItem value="name-asc">Name: A → Z</SelectItem>
+              <SelectItem value="name-desc">Name: Z → A</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Discount Checkbox */}
+          <label className="flex cursor-pointer items-center gap-2 text-gray-700 px-2 py-1.5 border border-gray-300 rounded-lg bg-white hover:shadow-sm transition-all duration-200">
             <input
               type="checkbox"
               checked={discountOnly}
               onChange={() => setDiscountOnly(!discountOnly)}
+              className=""
             />
             Discounted Only
           </label>

@@ -9,6 +9,7 @@ import { useProducts } from "@/app/contexts/ProductsContext";
 import { useParams } from "next/navigation";
 import ProductTabs from "@/components/product-tab";
 import RelatedProducts from "@/components/related-products";
+import ProductFeatures from "@/components/product-feature";
 
 export default function ProductDetail() {
   const { products, loading } = useProducts(); // use global products
@@ -45,8 +46,9 @@ export default function ProductDetail() {
           />
           <ProductInfo product={product} onAddToCart={handleAddToCart} />
         </div>
-          <ProductTabs />
-          <RelatedProducts />
+        <ProductFeatures />
+        <ProductTabs />
+        <RelatedProducts />
       </div>
     </div>
   );

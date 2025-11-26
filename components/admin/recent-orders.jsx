@@ -1,5 +1,12 @@
-import { MoreHorizontal } from "lucide-react"
-
+import { MoreHorizontal } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Adjust path as needed
+import { useRouter } from "next/navigation";
 const orders = [
   {
     id: "#ORD-3201",
@@ -41,24 +48,31 @@ const orders = [
     status: "Cancelled",
     date: "May 19, 2025",
   },
-]
+];
 
 const statusStyles = {
   Completed: "bg-green-100 text-green-700",
   Processing: "bg-blue-100 text-blue-700",
   Pending: "bg-yellow-100 text-yellow-700",
   Cancelled: "bg-red-100 text-red-700",
-}
+};
 
 export default function RecentOrders() {
+  const router = useRouter();
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-6 flex items-center justify-between border-b border-gray-100">
         <div>
           <h3 className="text-lg font-bold text-[#2C1810]">Recent Orders</h3>
-          <p className="text-sm text-gray-500">Manage and track your recent sales</p>
+          <p className="text-sm text-gray-500">
+            Manage and track your recent sales
+          </p>
         </div>
-        <button className="text-sm font-medium text-[#D4A574] hover:text-[#b38b5e] transition-colors">
+        <button
+          className="text-sm font-medium text-[#D4A574] hover:text-[#b38b5e] transition-colors cursor-pointer"
+          onClick={() => router.push("admin/orders")}
+        >
           View All Orders
         </button>
       </div>
@@ -77,23 +91,83 @@ export default function RecentOrders() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {orders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-6 py-4 font-medium text-[#2C1810]">{order.id}</td>
+              <tr
+                key={order.id}
+                className="hover:bg-gray-50/50 transition-colors"
+              >
+                <td className="px-6 py-4 font-medium text-[#2C1810]">
+                  {order.id}
+                </td>
                 <td className="px-6 py-4 text-gray-600">{order.customer}</td>
                 <td className="px-6 py-4 text-gray-600">{order.product}</td>
                 <td className="px-6 py-4 text-gray-500">{order.date}</td>
-                <td className="px-6 py-4 font-medium text-[#2C1810]">{order.amount}</td>
+                <td className="px-6 py-4 font-medium text-[#2C1810]">
+                  {order.amount}
+                </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[order.status]}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      statusStyles[order.status]
+                    }`}
                   >
                     {order.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-[#2C1810] transition-colors">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  <Select>
+                    <SelectTrigger className="w-10 h-10 p-2 border border-gray-300 bg-white rounded-lg  focus:border-[#D4A574] transition-all duration-200 flex items-center justify-center">
+                      <MoreHorizontal className="w-6 h-6 text-gray-500" />
+                    </SelectTrigger>
+
+                    <SelectContent className="bg-white border border-gray-200 rounded-lg shadow-lg">
+                      {/* Order Status Group */}
+                      <div className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500">
+                        Order Status
+                      </div>
+
+                      <SelectItem
+                        value="pending"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Pending
+                      </SelectItem>
+
+                      <SelectItem
+                        value="processing"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Processing
+                      </SelectItem>
+
+                      <SelectItem
+                        value="shipped"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Shipped
+                      </SelectItem>
+
+                      <SelectItem
+                        value="delivered"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Delivered
+                      </SelectItem>
+
+                      <SelectItem
+                        value="cancelled"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Cancelled
+                      </SelectItem>
+
+                      <SelectItem
+                        value="refunded"
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Refunded
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </td>
               </tr>
             ))}
@@ -101,5 +175,5 @@ export default function RecentOrders() {
         </table>
       </div>
     </div>
-  )
+  );
 }
