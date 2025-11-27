@@ -2,12 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Heart, Share2, CheckCircle } from "lucide-react";
-import StarRating from "./star-rating";
-import ReviewsList from "./review-list";
+import { Heart, Share2, CheckCircle, Stars } from "lucide-react";
 import { useProducts } from "@/app/contexts/ProductsContext";
-import RelatedProducts from "./related-products";
-
+import StarRating from "./star-rating";
 export default function ProductInfo({ onAddToCart }) {
   const { id: productId } = useParams();
   const { products, loading } = useProducts();
@@ -59,7 +56,6 @@ export default function ProductInfo({ onAddToCart }) {
         <div className="flex items-center gap-0.5">
           <StarRating rating={product.rating || 0} size="md" />
         </div>
-        <ReviewsList reviews={product.reviews || []} />
       </div>
 
       {/* Price & Stock */}

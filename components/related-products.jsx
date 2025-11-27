@@ -3,8 +3,8 @@
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useProducts } from "@/app/contexts/ProductsContext";
-import { useMemo, useRef } from "react";
-import Image from "next/image";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 // Add your domain here
 const DOMAIN = "https://yourdomain.com";
@@ -14,6 +14,7 @@ export default function RelatedProducts() {
   const router = useRouter();
   const { products = [], loading } = useProducts();
   const scrollRef = useRef(null);
+  const [productRatings, setProductRatings] = useState({});
 
   if (loading) return <p>Loading related products...</p>;
   if (!Array.isArray(products) || products.length === 0)
@@ -55,8 +56,47 @@ export default function RelatedProducts() {
       sameCategory = [...sameCategory, ...shuffled];
     }
 
-    return sameCategory.slice(0, 6);
+    return sameCategory;
   }, [products, currentProduct]);
+
+  // Fetch average ratings for related products
+  useEffect(() => {
+    const fetchRatings = async () => {
+      if (relatedProducts.length === 0) return;
+
+      const productIds = relatedProducts.map((p) => p.id);
+
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("product_id, rating")
+        .in("product_id", productIds);
+
+      if (error) {
+        console.error("Error fetching ratings:", error);
+        return;
+      }
+
+      // Calculate average rating per product
+      const ratingsMap = {};
+      data.forEach((review) => {
+        if (!ratingsMap[review.product_id]) {
+          ratingsMap[review.product_id] = { total: 0, count: 0 };
+        }
+        ratingsMap[review.product_id].total += review.rating || 0;
+        ratingsMap[review.product_id].count += 1;
+      });
+
+      const averages = {};
+      Object.keys(ratingsMap).forEach((productId) => {
+        const { total, count } = ratingsMap[productId];
+        averages[productId] = count > 0 ? total / count : 0;
+      });
+
+      setProductRatings(averages);
+    };
+
+    fetchRatings();
+  }, [relatedProducts]);
 
   const productImagesMap = useMemo(() => {
     const map = {};
@@ -122,52 +162,56 @@ export default function RelatedProducts() {
         className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {relatedProducts.map((product, idx) => (
-          <div
-            key={product.id}
-            className="shrink-0 w-[48%] sm:w-[32%] lg:w-[23%] snap-start cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-700"
-            style={{ animationDelay: `${idx * 100}ms` }}
-            onClick={() => router.push(`/admin/products/${product.id}`)}
-          >
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-[#f9f7f4] mb-3 shadow-sm transition-all duration-500 hover:shadow-md">
-              <img
-                src={productImagesMap[product.id]?.[0] || "/placeholder.svg"}
-                alt={product.name}
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 23vw"
-              />
-            </div>
-            <h3
-              className="font-bold text-sm mb-2 group-hover:text-[#d4a574] transition-colors line-clamp-2"
-              style={{ color: "var(--primary-dark)" }}
+        {relatedProducts.map((product, idx) => {
+          const averageRating = productRatings[product.id] || 0;
+
+          return (
+            <div
+              key={product.id}
+              className="shrink-0 w-[48%] sm:w-[32%] lg:w-[23%] snap-start cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-700"
+              style={{ animationDelay: `${idx * 100}ms` }}
+              onClick={() => router.push(`/admin/products/${product.id}`)}
             >
-              {product.name}
-            </h3>
-            <div className="flex justify-between items-center">
-              <span
-                className="font-bold text-sm"
-                style={{ color: "var(--primary-gold)" }}
+              <div className="relative aspect-square rounded-lg overflow-hidden bg-[#f9f7f4] mb-3 shadow-sm transition-all duration-500 hover:shadow-md">
+                <img
+                  src={productImagesMap[product.id]?.[0] || "/placeholder.svg"}
+                  alt={product.name}
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 23vw"
+                />
+              </div>
+              <h3
+                className="font-bold text-sm mb-2 group-hover:text-[#d4a574] transition-colors line-clamp-2"
+                style={{ color: "var(--primary-dark)" }}
               >
-                ${product.price}
-              </span>
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={11}
-                    className="fill-current"
-                    style={{
-                      color:
-                        i < Math.floor(product.rating || 0)
-                          ? "var(--primary-gold)"
-                          : "#e5e5e5",
-                    }}
-                  />
-                ))}
+                {product.name}
+              </h3>
+              <div className="flex justify-between items-center">
+                <span
+                  className="font-bold text-sm"
+                  style={{ color: "var(--primary-gold)" }}
+                >
+                  ${product.price}
+                </span>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={11}
+                      className="fill-current"
+                      style={{
+                        color:
+                          i < Math.floor(averageRating)
+                            ? "var(--primary-gold)"
+                            : "#e5e5e5",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -10,6 +10,8 @@ import { useParams } from "next/navigation";
 import ProductTabs from "@/components/product-tab";
 import RelatedProducts from "@/components/related-products";
 import ProductFeatures from "@/components/product-feature";
+import ReviewForm from "@/components/review-form";
+import ReviewsList from "@/components/review-list";
 
 export default function ProductDetail() {
   const { products, loading } = useProducts(); // use global products
@@ -46,9 +48,14 @@ export default function ProductDetail() {
           />
           <ProductInfo product={product} onAddToCart={handleAddToCart} />
         </div>
-        <ProductFeatures />
         <ProductTabs />
+        <ProductFeatures />
+
         <RelatedProducts />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
+          <ReviewForm />
+          <ReviewsList />
+        </div>
       </div>
     </div>
   );

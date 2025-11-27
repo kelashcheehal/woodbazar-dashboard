@@ -37,7 +37,6 @@ export function ProductsProvider({ children }) {
 
     loadData();
   }, []);
-console.log(categories);
 
   return (
     <ProductsContext.Provider value={{ products, categories, loading, error }}>
