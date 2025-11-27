@@ -1,27 +1,33 @@
-import { clerkMiddleware, createRouteMatcher, redirectToSignIn } from "@clerk/nextjs/server";
-
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+import { clerkMiddleware, redirectToSignIn } from "@clerk/nextjs/server";
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
 
-  // 1) Not logged in → redirect to sign-in
-  if (!userId && isAdminRoute(req)) {
+  // Not logged in → redirect to sign in
+  if (!userId) {
     return redirectToSignIn({ returnBackUrl: req.url });
   }
 
-  // 2) Check user role
+  // Logged in but not admin → block access to all pages
   const role = sessionClaims?.publicMetadata?.role;
 
-  if (isAdminRoute(req) && role !== "admin") {
+  if (role !== "admin") {
     return Response.redirect(new URL("/unauthorized", req.url));
   }
+
+  // If admin, allow access
 });
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/dashboard/:path*",
-    "/api/:path*",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     * - Clerk auth pages (sign-in, sign-up, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/auth).*)",
   ],
 };

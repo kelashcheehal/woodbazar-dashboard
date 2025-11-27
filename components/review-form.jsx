@@ -76,11 +76,11 @@ export default function ReviewForm() {
   };
 
   return (
-    <div className="max-w-2xl w-full">
-      <h3 className="text-xl font-bold mb-6">Write a Review</h3>
+    <div className="border-t w-full mb-6">
+      <h3 className="text-xl font-bold mb-4 mt-4">Write a Review</h3>
 
       {/* User Avatar */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-2 mb-6">
         {userImage && !imageError ? (
           <img
             src={userImage}
@@ -104,7 +104,7 @@ export default function ReviewForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Star Rating */}
         <div>
-          <label className="block text-sm font-semibold mb-2">
+          <label className="block text-sm font-semibold">
             Rate this Product
           </label>
           <div className="flex gap-1">
@@ -153,7 +153,7 @@ export default function ReviewForm() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          className="bg-[#2C1810] hover:bg-[#2C1810]/90 text-[#D4A574] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           {loading ? "Submitting..." : "Submit Review"}
         </button>

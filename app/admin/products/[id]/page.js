@@ -11,7 +11,7 @@ import ProductTabs from "@/components/product-tab";
 import RelatedProducts from "@/components/related-products";
 import ProductFeatures from "@/components/product-feature";
 import ReviewForm from "@/components/review-form";
-import ReviewsList from "@/components/review-list";
+import ReviewsMarquee, { MarqueeDemo } from "@/components/review-marquee";
 
 export default function ProductDetail() {
   const { products, loading } = useProducts(); // use global products
@@ -46,16 +46,15 @@ export default function ProductDetail() {
             productName={product.name}
             discount={discount}
           />
-          <ProductInfo product={product} onAddToCart={handleAddToCart} />
+          <ProductInfo />
         </div>
         <ProductTabs />
         <ProductFeatures />
 
         <RelatedProducts />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
-          <ReviewForm />
-          <ReviewsList />
-        </div>
+
+        <ReviewForm />
+        <MarqueeDemo />
       </div>
     </div>
   );
