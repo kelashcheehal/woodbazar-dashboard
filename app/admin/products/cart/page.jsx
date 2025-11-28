@@ -89,7 +89,7 @@ const CartPage = () => {
   };
 
   const continueShopping = () => {
-    router.push('products');
+    router.push('/admin/products');
   };
 
   if (cartLoading || productsLoading)

@@ -199,7 +199,7 @@ const CheckoutPage = () => {
 
       // Redirect to success page after 3 seconds
       setTimeout(() => {
-        router.push(`order-success/${order.id}`);
+        router.push(`orders/order-succes/${order.id}`);
       }, 3000);
     } catch (error) {
       console.error("Full order submission error:", {
